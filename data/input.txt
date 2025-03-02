@@ -1,0 +1,8 @@
+Flight details:
+From: #JFK
+To: #LHR
+Departure: D(2023-04-05T12:30-04:00)
+Arrival: T12(2023-04-06T07:30+01:00)
+
+Extra information:
+Layover in #CDG (Paris) for 2 hours
