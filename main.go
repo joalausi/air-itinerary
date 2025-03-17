@@ -3,146 +3,98 @@ package main
 import (
 	"flag"
 	"fmt"
-	"itinerary/formatter"
-	"itinerary/parser"
-	"itinerary/utls"
+	"os"
 )
 
 func main() {
+	// Цвета для терминала
+	yellow := "\033[93m"
+	green := "\033[32m"
+	red := "\033[31m"
+	reset := "\033[0m"
+	blue := "\033[44m"
+
+	// Флаг для списка вещей в поездку
+	packingListFlag := flag.Bool("packing-list", false, "Displays a suggested packing list")
 	flag.Usage = func() {
-		fmt.Println("itinerary usage:")
-		fmt.Println("go run . ./input.txt ./output.txt ./airport-lookup.csv")
+		fmt.Println(yellow, "Itinerary usage:", reset)
+		fmt.Println(green, "go run . input.txt output.txt airport-lookup.csv", reset)
+		fmt.Println(yellow, "Optional flag:", reset, green, "-packing-list", reset, yellow, "(Displays a suggested packing list)", reset)
 	}
 
+	// Разбираем аргументы командной строки
 	flag.Parse()
+
+	if *packingListFlag { // Если передан флаг -packing-list
+		PrintPackingList()
+		return
+	}
+
 	args := flag.Args()
-
-	if len(args) != 3 {
+	if len(args) != 3 { // Ожидаем три аргумента
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
-	inputPath := args[0]
-	outputPath := args[1]
-	airportLookupPath := args[2]
+	inputFile := args[0]
+	outputFile := args[1]
+	lookupFile := args[2]
 
-	inputData, err := utls.ReadFile(inputPath)
+	// Загружаем данные
+	dataInput, err := ReadInputFile(inputFile)
 	if err != nil {
-		fmt.Println("Вход не найден")
-		return
+		fmt.Println(red, "Error reading input file:", err, reset)
+		os.Exit(1)
 	}
 
-	airportData, err := utls.LoadAirportData(airportLookupPath)
+	dataLookup, err := ReadAirportLookupFile(lookupFile)
 	if err != nil {
-		fmt.Println("Поиск аэропорта не найден")
-		return
+		fmt.Println(red, "Error loading airport lookup:", err, reset)
+		os.Exit(1)
 	}
 
-	parsedData := parser.Parse(inputData, airportData)
-	formattedData := formatter.Format(parsedData)
+	// Обрабатываем файл
+	parsedData := ParseInputFile(dataInput, dataLookup)
 
-	err = utls.WriteFile(outputPath, formattedData)
+	// Записываем результат в файл
+	err = WriteToFile(outputFile, parsedData)
 	if err != nil {
-		fmt.Println("Ошибка записи в файл")
-		return
+		fmt.Println(red, "Error: Failed to write to file", reset)
+	} else {
+		fmt.Println(blue, "Success:", outputFile, "has been created and written successfully!", reset)
 	}
 }
 
-// package main
+// Функция записи обработанных данных в выходной файл
+func WriteToFile(output string, data string) error {
+	if data == "" {
+		return fmt.Errorf("no data to write")
+	}
 
-// import (
-// 	"flag"
-// 	"fmt"
-// 	"os"
-// 	"itinerary/formatter"
-// 	"itinerary/parser"
-// 	"itinerary/utls"
-// )
+	err := os.WriteFile(output, []byte(data), 0664)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func main() {
-// 	// Определение флага для вывода справочной информации
-// 	flag.Usage = func() {
-// 		fmt.Println("itinerary usage:")
-// 		fmt.Println("go run . ./input.txt ./output.txt ./airport-lookup.csv")
-// 	}
+// Функция вывода списка рекомендуемых вещей в поездку
+func PrintPackingList() {
+	green := "\033[32m"
+	brightGreen := "\033[92m"
+	red := "\033[91m"
+	reset := "\033[0m"
 
-// 	flag.Parse()
-// 	args := flag.Args()
+	fmt.Println(green, "\nWelcome to the travel itinerary tool!", reset)
+	fmt.Println(red, "\nHere is a suggested packing list for your trip:", reset)
 
-// 	// Проверяем количество аргументов
-// 	if len(args) != 3 {
-// 		flag.Usage()
-// 		return
-// 	}
+	packingList := []string{
+		"Passport", "Boarding Pass", "Phone", "Chargers",
+		"Laptop", "Headphones", "Travel Pillow", "Snacks",
+		"Water Bottle", "Sunglasses", "Notebook & Pen",
+	}
 
-// 	inputPath := args[0]
-// 	outputPath := args[1]
-// 	airportLookupPath := args[2]
-
-// 	// Чтение входных данных
-// 	inputData, err := utls.ReadFile(inputPath)
-// 	if err != nil {
-// 		fmt.Println("Вход не найден")
-// 		return
-// 	}
-
-// 	// Чтение данных аэропортов
-// 	airportData, err := utls.LoadAirportData(airportLookupPath)
-// 	if err != nil {
-// 		fmt.Println("Поиск аэропорта не найден")
-// 		return
-// 	}
-
-// 	// Обработка входных данных
-// 	parsedData := parser.Parse(inputData, airportData)
-// 	formattedData := formatter.Format(parsedData)
-
-// 	// Запись результата в файл
-// 	err = utls.WriteFile(outputPath, formattedData)
-// 	if err != nil {
-// 		fmt.Println("Ошибка записи выходного файла")
-// 	}
-// }
-
-// COLOR
-// func main() {
-
-// 	// Проверяем аргументы
-// 	if len(os.Args) != 4 {
-// 		color.Red("Usage: go run . <input file> <output file> <airport lookup file>go run . ./input.txt ./output.txt ./airport-lookup.csv")
-// 		os.Exit(1)
-// 	}
-
-// 	inputFile := os.Args[1]
-// 	outputFile := os.Args[2]
-// 	lookupFile := os.Args[3]
-
-// 	// Читаем маршруты
-// 	flights, err := parser.ParseFile(inputFile)
-// 	if err != nil {
-// 		color.Red("Error reading input file: %v", err)
-// 		os.Exit(1)
-// 	}
-
-// 	// Загружаем данные аэропортов
-// 	lookup, err := utils.LoadAirportLookup(lookupFile)
-// 	if err != nil {
-// 		color.Red("Error reading airport lookup file: %v", err)
-// 		os.Exit(1)
-// 	}
-
-// 	// Форматируем маршрут
-// 	formatted := formatter.FormatItinerary(flights, lookup)
-
-// 	// Записываем результат
-// 	err = utils.WriteFile(outputFile, formatted)
-// 	if err != nil {
-// 		color.Red("Error writing output file: %v", err)
-// 		os.Exit(1)
-// 	}
-
-// 	// Выводим цветной результат
-// 	formatter.FormatColored(formatted)
-
-// 	color.Green("✔ Itinerary successfully formatted!")
-// }
+	for _, item := range packingList {
+		fmt.Println(brightGreen, "-", item, reset)
+	}
+}

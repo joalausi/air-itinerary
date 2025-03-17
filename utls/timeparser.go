@@ -6,56 +6,54 @@ import (
 	"time"
 )
 
-// monthNames - названия месяцев для удобного формата даты
+// monthNames - английские названия месяцев
 var monthNames = map[string]string{
 	"01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr", "05": "May", "06": "Jun",
 	"07": "Jul", "08": "Aug", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
 }
 
-// FormatDate преобразует дату D(2007-04-05T12:30−02:00) → "05 апр. 2007"
-func FormatDate(input string) string {
-	// Регулярное выражение для даты формата D(2007-04-05T12:30−02:00)
-	re := regexp.MustCompile(`D\((\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)\)`)
+// FormatDateTime formats date and time into a more readable format
+func FormatDateTime(input string) string {
+	// Regex for D(...) and T12(...)/T24(...)
+	re := regexp.MustCompile(`(D|T12|T24)\((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})([+-]\d{2}:\d{2}|Z)\)`)
 	match := re.FindStringSubmatch(input)
 
 	if match == nil {
-		return input // Если не найдено, вернуть как есть
+		return input // If format is incorrect, return as is
 	}
 
-	year, month, day := match[1], match[2], match[3]
-	monthName := monthNames[month]
-	return fmt.Sprintf("%s %s %s", day, monthName, year)
-}
+	formatType, year, month, day, hour, minute, offset := match[1], match[2], match[3], match[4], match[5], match[6], match[7]
 
-// FormatTime преобразует время
-func FormatTime(input string) string {
-	// Регулярное выражение для времени (12-часовой и 24-часовой формат)
-	re := regexp.MustCompile(`T(12|24)\((\d{4}-\d{2}-\d{2}T\d{2}:\d{2})([+-]\d{2}:\d{2}|Z)\)`)
-	match := re.FindStringSubmatch(input)
-
-	if match == nil {
-		return input
+	// If it's a date format (D), return formatted date
+	if formatType == "D" {
+		monthName := monthNames[month]
+		return fmt.Sprintf("%s %s %s", day, monthName, year)
 	}
 
-	timeFormat := match[1] // 12 или 24
-	timestamp := match[2]  // 2007-04-05T12:30
-	offset := match[3]     // -02:00 или Z
+	// Construct time string
+	timeStr := fmt.Sprintf("%s-%s-%sT%s:%s%s", year, month, day, hour, minute, offset)
 
-	// Парсим время в формат Go
-	parsedTime, err := time.Parse("2006-01-02T15:04", timestamp)
+	// Parse into time.Time object
+	parsedTime, err := time.Parse("2006-01-02T15:04-07:00", timeStr)
 	if err != nil {
 		return input
 	}
 
-	// Определяем формат вывода
-	if timeFormat == "12" {
-		return fmt.Sprintf("%s %s", parsedTime.Format("03:04PM"), formatOffset(offset))
+	// Determine time format
+	var formattedTime string
+	if formatType == "T12" {
+		formattedTime = parsedTime.Format("03:04PM")
 	} else {
-		return fmt.Sprintf("%s %s", parsedTime.Format("15:04"), formatOffset(offset))
+		formattedTime = parsedTime.Format("15:04")
 	}
+
+	// Handle offset formatting
+	formattedOffset := formatOffset(offset)
+
+	return fmt.Sprintf("%s %s", formattedTime, formattedOffset)
 }
 
-// formatOffset преобразует смещение часового пояса
+// formatOffset formats time zone offset
 func formatOffset(offset string) string {
 	if offset == "Z" {
 		return "(+00:00)"

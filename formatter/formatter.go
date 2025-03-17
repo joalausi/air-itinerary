@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"itinerary/parser"
 	"itinerary/utls"
+	"strings"
 )
 
-// FormatItinerary форматирует список маршрутов с использованием airport lookup
+// Format принимает список маршрутов и карту кодов аэропортов и возвращает отформатированную строку
 func Format(flights []parser.Flight, lookup map[string]string) string {
-	var result string
+	var result strings.Builder
 
 	// Проходим по всем маршрутам
 	for _, flight := range flights {
@@ -22,16 +23,13 @@ func Format(flights []parser.Flight, lookup map[string]string) string {
 			destination = flight.Destination
 		}
 
-		// Форматируем время (может быть датой или временем)
-		formattedTime := utls.FormatDate(flight.Time)
-		if formattedTime == flight.Time { // Если это не дата, пробуем формат времени
-			formattedTime = utls.FormatTime(flight.Time)
-		}
+		// Форматируем дату и время
+		formattedDateTime := utls.FormatDateTime(flight.DateTime)
 
-		// Добавляем отформатированную строку
-		result += fmt.Sprintf("%s: Flight from %s (%s) to %s (%s)\n",
-			formattedTime, origin, flight.Origin, destination, flight.Destination)
+		// Добавляем отформатированную строку в буфер
+		result.WriteString(fmt.Sprintf("%s: Flight from %s (%s) to %s (%s)\n",
+			formattedDateTime, origin, flight.Origin, destination, flight.Destination))
 	}
 
-	return result
+	return result.String()
 }
