@@ -3,37 +3,38 @@ package parser
 import (
 	"bufio"
 	"fmt"
+	"itinerary/utls"
 	"os"
 	"regexp"
 	"strings"
 )
 
-// Flight описывает один маршрут
+// Flight describes one route
 type Flight struct {
 	Origin      string
 	Destination string
 	DateTime    string
 }
 
-// ParseFile считывает текстовый файл и возвращает список маршрутов
+// Parse reads a text file and returns list of routes
 func Parse(filePath string) ([]Flight, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Ошибка: не удалось открыть файл %s: %w", filePath, err)
+		return nil, fmt.Errorf("%sError: Failed to open file %s: %w%s", utls.Red, filePath, err, utls.Reset)
 	}
 	defer file.Close()
 
 	var flights []Flight
 	scanner := bufio.NewScanner(file)
 
-	// Регулярное выражение для поиска маршрутов
+	// Regular expression for finding routes
 	flyPattern := regexp.MustCompile(`^([A-Z]{3})-([A-Z]{3})\s+D?\(?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?:Z|[-+]\d{2}:\d{2}))\)?$`)
 
-	// Читаем файл построчно
+	// read file line by line
 	for scanner.Scan() {
 		line := cleanText(scanner.Text())
 
-		// Ищем маршрут в строке
+		// looking for aroute in line
 		match := flyPattern.FindStringSubmatch(line)
 		if match != nil {
 			flights = append(flights, Flight{
@@ -42,12 +43,12 @@ func Parse(filePath string) ([]Flight, error) {
 				DateTime:    match[3],
 			})
 		} else {
-			fmt.Printf("Предупреждение: строка не соответствует формату маршрута: %s\n", line)
+			fmt.Printf("%sWarning: string does not match route format: %s\n%s", utls.Yellow, line, utls.Reset)
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("Ошибка при чтении файла: %w", err)
+		return nil, fmt.Errorf("%sError reading file: %w%s", utls.Red, err, utls.Reset)
 	}
 
 	return flights, nil
