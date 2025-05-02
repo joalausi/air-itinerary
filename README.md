@@ -13,3 +13,13 @@ A program that reads a text file with an itinerary and converts airport codes, d
 - Preserves punctuation and surrounding text
 - Removes extra blank lines from the output ensuring that the output is clean and readable
 
+
+## Usage
+
+```go
+go run . ./input.txt ./output.txt ./airports_lookup.csv
+```
+
+- input: Textfile with the itinerary that needs to be prettified.
+- output: Output file, where the prettified itinerary will be written.
+- airport-lookup: The path to the CSV file that contains the information for airport code lookup.
