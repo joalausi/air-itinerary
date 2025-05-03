@@ -62,30 +62,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Process lookup data
+	//Process lookup data
 	lookupData, err := utls.LoadAirportData(lookupFile)
 	if err != nil {
 		fmt.Printf(utls.Red+"Error loading airport lookup: %v\n"+utls.Reset, err)
 		os.Exit(1)
 	}
 
-	// Process input data
+	// parse input data
 	flights, err := parser.Parse(inputData, lookupData)
 	if err != nil {
-		fmt.Printf(utls.Red+"Error parsing data: %v\n"+utls.Reset, err)
+		fmt.Printf(utls.Red+"Parse error: %v\n"+utls.Reset, err)
 		os.Exit(1)
 	}
 
 	// Format the processed data
 	formattedData, err := formatter.Format(flights, lookupData)
 	if err != nil {
-		fmt.Printf(utls.Red+"Error formatting data: %v\n"+utls.Reset, err)
+		fmt.Printf(utls.Red+"Format error: %v\n"+utls.Reset, err)
 		os.Exit(1)
 	}
 
 	// Write processed data to output file
 	if err := WriteToFile(outputFile, formattedData); err != nil {
-		fmt.Println(utls.Red, "Error: Failed to write to file:", err, utls.Reset)
+		fmt.Printf(utls.Red+"Error: Failed to write to file: %v\n"+utls.Reset, err)
 		os.Exit(1)
 	}
 	fmt.Println(utls.Blue, "Success:", outputFile, "has been created and written successfully!", utls.Reset)
