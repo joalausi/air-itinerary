@@ -23,3 +23,42 @@ go run . ./input.txt ./output.txt ./airports_lookup.csv
 - input: Textfile with the itinerary that needs to be prettified.
 - output: Output file, where the prettified itinerary will be written.
 - airport-lookup: The path to the CSV file that contains the information for airport code lookup.
+
+### Help
+To display the help message, run the program with the -h flag.
+```go
+go run . -h
+```
+
+### IATA Codes
+- Format: `#XXX`
+- Example: `#HEL` → "Helsinki-Vantaa Airport"
+- Short form: `*#HEL` → "Helsinki"
+
+### ICAO Codes
+- Format: `##XXXX`
+- Example: `##EGLL` → "London Heathrow Airport"
+- Short form: `*##EGLL` → "London"
+
+### Brackets and Punctuation
+- Supports brackets: `(#HEL)`, `[#LAX]`, `{##EGLL}`
+- Preserves punctuation: `#HEL.`, `##EGLL,`
+- Works mid-word with brackets: `text(#LAX)more`
+
+### Dates and Times
+- Date: `D(2024-01-15T08:30Z)` → "15 Jan 2024"
+- 24h time: `T24(2042-09-01T21:43Z)` → "21:43 (00:00)"
+- 12h time: `T12(2024-07-23T15:29-11:00)` → "03:29 PM (-11:00)"
+
+## CSV File Structure
+
+The airport lookup file should contain the following columns(can be in any order):
+- name
+- iso_country
+- municipality
+- icao_code
+- iata_code
+- coordinates
+
+
+## Project Files 
