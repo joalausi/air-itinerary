@@ -7,10 +7,12 @@ import (
 	"itinerary/parser"
 	"itinerary/utls"
 	"os"
+	"strings"
 )
 
 func main() {
 	flag.Usage = func() {
+		fmt.Println(utls.Yellow + "Itinerary usage:" + utls.Reset)
 		fmt.Println(utls.Yellow + "Usage: go run . <input.txt> <output.txt> <airport-lookup.csv>" + utls.Reset)
 	}
 
@@ -43,6 +45,11 @@ func main() {
 	if err != nil {
 		fmt.Printf(utls.Red+"Error reading input file: %v\n"+utls.Reset, err)
 		os.Exit(1)
+	}
+
+	// Clean input data
+	for i, line := range inputData {
+		inputData[i] = cleanText(line)
 	}
 
 	//Process lookup data
@@ -99,4 +106,10 @@ func WriteToFile(filePath string, lines []string) error {
 		}
 	}
 	return nil
+}
+
+// cleanText cleans the input string by replacing certain characters with newlines
+func cleanText(s string) string {
+	replacer := strings.NewReplacer("\v", "\n", "\f", "\n", "\r", "\n")
+	return replacer.Replace(s)
 }
