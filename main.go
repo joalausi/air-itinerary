@@ -38,8 +38,6 @@ func main() {
 	outputFile := flag.Arg(1) // Path to output text file (to be created)
 	lookupFile := flag.Arg(2) // Path to airport lookup CSV file
 
-	// // Здесь можно добавить обработку inputData, работу с outputPath и lookupPath
-
 	// Read input file
 	inputData, err := utls.ReadFile(inputFile)
 	if err != nil {
