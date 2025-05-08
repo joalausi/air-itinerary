@@ -13,7 +13,7 @@ import (
 func main() {
 	flag.Usage = func() {
 		fmt.Println(utls.Yellow + "Itinerary usage:" + utls.Reset)
-		fmt.Println(utls.Yellow + "Usage: go run . <input.txt> <output.txt> <airport-lookup.csv>" + utls.Reset)
+		fmt.Println(utls.Yellow + "Usage: go run . ./input.txt ./output.txt ./airport-lookup.csv" + utls.Reset)
 	}
 
 	// Parse command-line arguments
