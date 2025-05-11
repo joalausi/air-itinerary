@@ -13,6 +13,22 @@ A program that reads a text file with an itinerary and converts airport codes, d
 - Preserves punctuation and surrounding text
 - Removes extra blank lines from the output ensuring that the output is clean and readable
 
+```
+/itinerary
+│
+├── main.go                # Entry
+├── parser/                # Route parsing module
+│   ├── parser.go
+├── formatter/             # Data formatting
+│   ├── formatter.go
+├── utils/                 # Utilities (reading files, transform, error handling)
+│   ├── file.go
+│   ├── airport_lookup.go
+│   ├── time_parser.go
+├──input.txt
+├──output.txt
+├──airports_lookup.csv 
+```
 
 ## Usage
 
