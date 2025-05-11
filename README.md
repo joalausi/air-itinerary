@@ -13,9 +13,49 @@ A program that reads a text file with an itinerary and converts airport codes, d
 - Preserves punctuation and surrounding text
 - Removes extra blank lines from the output ensuring that the output is clean and readable
 
+## Installation
+
+```bash
+git clone https://gitea.koodsisu.fi/artemchornonoh1/itinerary.git
+cd ~/itinerary
+```
+
+## Usage
+
+```go
+go run . ./input.txt ./output.txt ./airport-lookup.csv
+```
+
+- input: Textfile with the itinerary that needs to be prettified.
+- output: Output file, where the prettified itinerary will be written.
+- airport-lookup: The path to the CSV file that contains the information for airport code lookup.
+
+### Help
+To display the help message, run the program with the -h flag.
+```go
+go run . -h
+```
+
+### Example input
+```go
+Input:
+
+#LAX to *##EGLL on D(2023-07-15T09:00-07:00)
+Departure: T12(2023-07-15T09:00-07:00)
+Arrival: T24(2023-07-16T12:00Z)
+```
+
+### Example output
+```go
+Output:
+
+Los Angeles International Airport to London on 15 Jul 2023
+Departure: 09:00AM (-07:00)
+Arrival: 12:00 (+00:00)
+```
 
 ## Structure
-```
+```bash
 /itinerary
 │
 ├── main.go                # Entry
@@ -27,25 +67,10 @@ A program that reads a text file with an itinerary and converts airport codes, d
 │   ├── file.go
 │   ├── airport_lookup.go
 │   ├── time_parser.go
+│   ├── colors.go
 ├──input.txt
 ├──output.txt
 ├──airports_lookup.csv 
-```
-
-## Usage
-
-```go
-go run . ./input.txt ./output.txt ./airports_lookup.csv
-```
-
-- input: Textfile with the itinerary that needs to be prettified.
-- output: Output file, where the prettified itinerary will be written.
-- airport-lookup: The path to the CSV file that contains the information for airport code lookup.
-
-### Help
-To display the help message, run the program with the -h flag.
-```go
-go run . -h
 ```
 
 ### IATA Codes
@@ -77,3 +102,7 @@ The airport lookup file should contain the following columns(can be in any order
 - icao_code
 - iata_code
 - coordinates
+
+## Contact
+
+For more information, feel free to reach out on Discord - joalausi
