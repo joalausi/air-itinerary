@@ -13,6 +13,8 @@ A program that reads a text file with an itinerary and converts airport codes, d
 - Preserves punctuation and surrounding text
 - Removes extra blank lines from the output ensuring that the output is clean and readable
 
+
+## Structure
 ```
 /itinerary
 │
@@ -75,6 +77,3 @@ The airport lookup file should contain the following columns(can be in any order
 - icao_code
 - iata_code
 - coordinates
-
-
-## Project Files 
