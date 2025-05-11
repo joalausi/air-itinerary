@@ -14,25 +14,25 @@ type Flight struct {
 	RawLines    []string
 }
 
-// Parse преобразует входные строки в слайс Flights по заданным правилам.
+// Parse transforms input strings into a Flights slice according to the given rules.
 func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 	var flights []Flight
 	currentIndex := -1
 
-	// Предобработка строк: разделение по маркерам ^t или ^f (вставка перевода строки)
+	// Preprocessing strings: split by ^t or ^f markers (insert line feed)
 	var procLines []string
 	for _, line := range lines {
 		if strings.Contains(line, "^") {
 			var buf strings.Builder
 			for i := 0; i < len(line); i++ {
 				if line[i] == '^' && i+1 < len(line) && (line[i+1] == 't' || line[i+1] == 'f') {
-					// Разрыв строки по маркеру
+					// Break line at marker
 					procLines = append(procLines, buf.String())
 					buf.Reset()
 					if line[i+1] == 't' {
 						i++
 					} else if line[i+1] == 'f' {
-						// Пропустить все подряд идущие 'f'
+						// Skip all consecutive 'f''
 						j := i + 1
 						for j < len(line) && line[j] == 'f' {
 							j++
@@ -49,17 +49,17 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 		}
 	}
 
-	// Регулярка для строк типа "X to Y on D(...)"
+	// Regular expression for strings like "X to Y on D(...)"
 	routePattern := regexp.MustCompile(`[#*()]*([A-Za-z0-9]+)[^A-Za-z0-9]+to[^A-Za-z0-9]*[#*()]*([A-Za-z0-9]+)[^A-Za-z0-9]*on\s*D\(([^)]+)\)`)
 
 	for _, raw := range procLines {
 		line := strings.TrimSpace(raw)
 		if line == "" {
-			// Пустая строка — закрыть текущий блок полёта
+			// Empty string - close current flight block
 			currentIndex = -1
 			continue
 		}
-		// Обработка метки "Departure:"
+		// Processing label "Departure:"
 		if strings.HasPrefix(line, "Departure:") {
 			dep := strings.TrimSpace(strings.TrimPrefix(line, "Departure:"))
 			if currentIndex >= 0 {
@@ -70,7 +70,7 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 			}
 			continue
 		}
-		// Обработка метки "Arrival:"
+		// Processing the label "Arrival:"
 		if strings.HasPrefix(line, "Arrival:") {
 			arr := strings.TrimSpace(strings.TrimPrefix(line, "Arrival:"))
 			if currentIndex >= 0 {
@@ -81,7 +81,7 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 			}
 			continue
 		}
-		// Отдельные строки T12(...), T24(...), D(...)
+		// Separate libes T12(...), T24(...), D(...)
 		if strings.HasPrefix(line, "T12(") {
 			flights = append(flights, Flight{Departure: line})
 			currentIndex = len(flights) - 1
@@ -97,7 +97,7 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 			currentIndex = len(flights) - 1
 			continue
 		}
-		// Строки маршрутов вида "X to Y on D(...)"
+		// Route lines of the type "X to Y on D(...)"
 		if len(line) > 0 {
 			first := line[0]
 			if first == '#' || first == '(' || first == '*' {
@@ -115,7 +115,7 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 				}
 			}
 		}
-		// Прочие строки — необработанный текст
+		// Other lines - raw text
 		if currentIndex >= 0 {
 			flights[currentIndex].RawLines = append(flights[currentIndex].RawLines, line)
 		} else {
@@ -125,20 +125,3 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 	}
 	return flights, nil
 }
-
-// // cleanText убирает лишние символы переноса строки и заменяет их на "\n"
-// func cleanText(input string) string {
-// 	replacer := strings.NewReplacer("\v", "\n", "\f", "\n", "\r", "\n")
-// 	input = replacer.Replace(input)
-
-// 	// Убираем лишние пустые строки
-// 	lines := strings.Split(input, "\n")
-// 	var cleaned []string
-// 	for _, line := range lines {
-// 		trimmed := strings.TrimSpace(line)
-// 		if trimmed != "" || (len(cleaned) > 0 && cleaned[len(cleaned)-1] != "") {
-// 			cleaned = append(cleaned, trimmed)
-// 		}
-// 	}
-// 	return strings.Join(cleaned, "\n")
-// }

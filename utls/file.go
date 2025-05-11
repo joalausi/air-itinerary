@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ReadFile читает содержимое текстового файла и возвращает его строки.
+// ReadFile reads contents of a text file and returns lines as a slice of strings.
 func ReadFile(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -25,7 +25,7 @@ func ReadFile(filePath string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-// ReadCSV читает содержимое CSV-файла и возвращает данные как двумерный массив строк.
+// ReadCSV reads a CSV file and returns its contents as a slice of string slices.
 func ReadCSV(filePath string) ([][]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -35,7 +35,7 @@ func ReadCSV(filePath string) ([][]string, error) {
 
 	reader := csv.NewReader(file)
 
-	// Убираем возможный BOM (если файл в UTF-8 с BOM)
+	// Remove possible BOM (Byte Order Mark) from the first line(if the file is in UTF-8 with BOM)
 	firstLine, err := reader.Read()
 	if err != nil {
 		return nil, err
@@ -49,17 +49,17 @@ func ReadCSV(filePath string) ([][]string, error) {
 		return nil, err
 	}
 
-	// Вставляем первую строку обратно (если была прочитана)
+	// Insert the first line back (if it was read)
 	return append([][]string{firstLine}, records...), nil
 }
 
-// WriteFile записывает данные в выходной текстовый файл.
+// WriteFile writes a slice of strings to output file.
 func WriteFile(filePath string, lines []string) error {
 	data := strings.Join(lines, "\n") + "\n"
 	return os.WriteFile(filePath, []byte(data), 0644)
 }
 
-// ValidateCSV проверяет валидность структуры CSV-файла.
+// ValidateCSV checks the structure of a CSV file.
 func ValidateCSV(data [][]string) error {
 	if len(data) == 0 {
 		return errors.New("CSV file is empty")

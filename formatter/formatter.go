@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-// Format принимает список Flight и карту lookup (код → название аэропорта),
-// и возвращает готовые строки для записи в output.txt.
+// Format takes a Flight list and lookup map (code → airport name),
+// and returns ready strings for writing to output.txt.
 func Format(flights []parser.Flight, lookup map[string]string) ([]string, error) {
 	var out []string
 
-	// Регэксп для замены кодов аэропортов: #CODE
+	// Regexp for replacing airport codes: #CODE
 	codePattern := regexp.MustCompile(`#([A-Za-z0-9]+)`)
-	// Регэксп для поиска дат D(...)
+	// Regexp for searching dates D(...)
 	datePattern := regexp.MustCompile(`D\([^)]*\)`)
 
 	for _, f := range flights {
-		// 1) Маршрут: Origin → Destination [on DATE]
+		// 1) route(itinerary): Origin → Destination [on DATE]
 		if f.Origin != "" && f.Destination != "" {
 			originName := lookup[f.Origin]
 			if originName == "" {
@@ -32,7 +32,7 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 
 			line := fmt.Sprintf("%s to %s", originName, destName)
 			if f.Date != "" {
-				// Обработка суффикса Z) → +00:00)
+				// Processing suffix Z) → +00:00)
 				tok := f.Date
 				if strings.HasSuffix(tok, "Z)") {
 					tok = strings.Replace(tok, "Z)", "+00:00)", 1)
@@ -43,10 +43,10 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 			out = append(out, line)
 		}
 
-		// 2) Сырые строки (RawLines): код/дата/время внутри произвольного текста
+		// 2) (RawLines): code/date/time inside arbitrary text
 		if len(f.RawLines) > 0 {
 			for _, raw := range f.RawLines {
-				// 2.1) Сначала заменяем коды аэропортов
+				// 2.1) First, replace the airport codes
 				line := codePattern.ReplaceAllStringFunc(raw, func(match string) string {
 					code := match[1:]
 					if name, ok := lookup[code]; ok {
@@ -55,7 +55,7 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 					return match
 				})
 
-				// 2.2) Заменяем даты D(...)
+				// 2.2) replace dates D(...)
 				line = datePattern.ReplaceAllStringFunc(line, func(match string) string {
 					tok := match
 					if strings.HasSuffix(tok, "Z)") {
@@ -64,12 +64,12 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 					return utls.FormatDateTime(tok)
 				})
 
-				// 2.3) Обрабатываем временные метки T12(...) и T24(...)
+				// 2.3) Processing timestamps T12(...) и T24(...)
 				parts := strings.Fields(line)
 				for i, token := range parts {
 					if strings.HasPrefix(token, "T12(") || strings.HasPrefix(token, "T24(") {
 						tkn := token
-						// Преобразуем Z) в +00:00)
+						// transform Z) t +00:00)
 						if strings.HasSuffix(tkn, "Z)") {
 							tkn = strings.Replace(tkn, "Z)", "+00:00)", 1)
 						}
@@ -81,7 +81,7 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 			}
 		}
 
-		// 3) Блоки только с датой (без маршрута и без RawLines)
+		// 3) Date-only blocks (no route and no RawLines)
 		if f.Date != "" && f.Origin == "" && f.Destination == "" && len(f.RawLines) == 0 {
 			tok := f.Date
 			if strings.HasSuffix(tok, "Z)") {
@@ -90,7 +90,7 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 			out = append(out, utls.FormatDateTime(tok))
 		}
 
-		// 4) Поле Departure
+		// 4) block Departure
 		if f.Departure != "" {
 			tok := f.Departure
 			if strings.HasSuffix(tok, "Z)") {
@@ -98,14 +98,14 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 			}
 			formatted := utls.FormatDateTime(tok)
 			if f.Origin == "" && f.Destination == "" && len(f.RawLines) == 0 && f.Date == "" {
-				// если это единственная метка в блоке
+				// if its only one label in block
 				out = append(out, formatted)
 			} else {
 				out = append(out, "Departure: "+formatted)
 			}
 		}
 
-		// 5) Поле Arrival
+		// 5) block Arrival
 		if f.Arrival != "" {
 			tok := f.Arrival
 			if strings.HasSuffix(tok, "Z)") {
@@ -119,11 +119,11 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 			}
 		}
 
-		// Пустая строка-разделитель между блоками
+		// Empty line separator between blocks
 		out = append(out, "")
 	}
 
-	// Удаляем финальную пустую строку, если она есть
+	// Remove the final blank line if there is one
 	if len(out) > 0 && out[len(out)-1] == "" {
 		out = out[:len(out)-1]
 	}

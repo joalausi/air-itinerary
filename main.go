@@ -23,18 +23,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// // Флаг для списка вещей в поездку
-	// packingListFlag := flag.Bool("packing-list", false, "Displays a suggested packing list")
-	// flag.Usage = func() {
-	// 	fmt.Println(yellow, "Itinerary usage:", reset)
-	// 	fmt.Println(green, "go run . input.txt output.txt airport-lookup.csv", reset)
-	// 	fmt.Println(yellow, "Optional flag:", reset, green, "-packing-list", reset, yellow, "(Displays a suggested packing list)", reset)
-	// }
-	// if *packingListFlag { // Если передан флаг -packing-list
-	// 	PrintPackingList()
-	// 	return
-	// }
-
 	// Parse command-line arguments
 	inputFile := flag.Arg(0)  // Path to input text file
 	outputFile := flag.Arg(1) // Path to output text file (to be created)
