@@ -1,5 +1,5 @@
 Input:
 
-*#LAX to *##EGLL on D(2023-07-15T09:00-07:00)
+*##EGLL to *#LAX on D(2023-07-15T09:00-07:00)
 Departure: T12(2023-07-15T09:00-07:00)
 Arrival: T24(2023-07-16T12:00Z)

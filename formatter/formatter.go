@@ -8,31 +8,48 @@ import (
 	"strings"
 )
 
-// Format takes a Flight list and lookup map (code → airport name),
+// Format takes a Flight list and lookup maps (code → airport, code→city)
 // and returns ready strings for writing to output.txt.
 func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) ([]string, error) {
 	var out []string
 
-	// Regexp for replacing airport codes: #CODE
-	codePattern := regexp.MustCompile(`(\*)?(?:#{1,2})([A-Za-z0-9]+)`) // cheking groups[1] — "*" or "", groups[2] — code than #CODE or ##CODE
+	// Regexp for replacing airport codes: optional "*" then "#" or "##", then code
+	codePattern := regexp.MustCompile(`(\*)?(?:#{1,2})([A-Za-z0-9]+)`) // groups[1]=="*" or "", groups[2]==code
 	// Regexp for searching dates D(...)
 	datePattern := regexp.MustCompile(`D\([^)]*\)`)
 
 	for _, f := range flights {
 		// 1) route(itinerary): Origin → Destination [on DATE]
 		if f.Origin != "" && f.Destination != "" {
-			originName := lookupName[f.Origin]
-			if originName == "" {
-				originName = f.Origin
+			// choose city or full name based on flags
+			var originName string
+			if f.OriginCityOnly {
+				if city, ok := lookupCity[f.Origin]; ok {
+					originName = city
+				}
 			}
-			destName := lookupName[f.Destination]
+			if originName == "" {
+				originName = lookupName[f.Origin]
+				if originName == "" {
+					originName = f.Origin
+				}
+			}
+
+			var destName string
+			if f.DestCityOnly {
+				if city, ok := lookupCity[f.Destination]; ok {
+					destName = city
+				}
+			}
 			if destName == "" {
-				destName = f.Destination
+				destName = lookupName[f.Destination]
+				if destName == "" {
+					destName = f.Destination
+				}
 			}
 
 			line := fmt.Sprintf("%s to %s", originName, destName)
 			if f.Date != "" {
-				// Processing suffix Z) → +00:00)
 				tok := f.Date
 				if strings.HasSuffix(tok, "Z)") {
 					tok = strings.Replace(tok, "Z)", "+00:00)", 1)
@@ -46,11 +63,9 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 		// 2) (RawLines): code/date/time inside arbitrary text
 		if len(f.RawLines) > 0 {
 			for _, raw := range f.RawLines {
-				// 2.1) First, replace the airport codes
 				line := codePattern.ReplaceAllStringFunc(raw, func(match string) string {
 					groups := codePattern.FindStringSubmatch(match)
-					star, code := groups[1], groups[2] // groups[1] — "*" or "", groups[2] — code
-
+					star, code := groups[1], groups[2]
 					if star == "*" {
 						if city, ok := lookupCity[code]; ok {
 							return city
@@ -62,7 +77,6 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 					return match
 				})
 
-				// 2.2) replace dates D(...)
 				line = datePattern.ReplaceAllStringFunc(line, func(match string) string {
 					tok := match
 					if strings.HasSuffix(tok, "Z)") {
@@ -71,12 +85,11 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 					return utls.FormatDateTime(tok)
 				})
 
-				// 2.3) Processing timestamps T12(...) и T24(...)
+				// timestamps T12(), T24()
 				parts := strings.Fields(line)
 				for i, token := range parts {
 					if strings.HasPrefix(token, "T12(") || strings.HasPrefix(token, "T24(") {
 						tkn := token
-						// transform Z) t +00:00)
 						if strings.HasSuffix(tkn, "Z)") {
 							tkn = strings.Replace(tkn, "Z)", "+00:00)", 1)
 						}
@@ -88,7 +101,7 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 			}
 		}
 
-		// 3) Date-only blocks (no route and no RawLines)
+		// 3) Date-only
 		if f.Date != "" && f.Origin == "" && f.Destination == "" && len(f.RawLines) == 0 {
 			tok := f.Date
 			if strings.HasSuffix(tok, "Z)") {
@@ -97,7 +110,7 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 			out = append(out, utls.FormatDateTime(tok))
 		}
 
-		// 4) block Departure
+		// 4) Departure
 		if f.Departure != "" {
 			tok := f.Departure
 			if strings.HasSuffix(tok, "Z)") {
@@ -105,14 +118,13 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 			}
 			formatted := utls.FormatDateTime(tok)
 			if f.Origin == "" && f.Destination == "" && len(f.RawLines) == 0 && f.Date == "" {
-				// if its only one label in block
 				out = append(out, formatted)
 			} else {
 				out = append(out, "Departure: "+formatted)
 			}
 		}
 
-		// 5) block Arrival
+		// 5) Arrival
 		if f.Arrival != "" {
 			tok := f.Arrival
 			if strings.HasSuffix(tok, "Z)") {

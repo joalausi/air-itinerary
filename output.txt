@@ -1,4 +1,4 @@
 Input:
-Los Angeles International Airport to London Heathrow Airport on 15 Jul 2023
+London to Los Angeles International Airport on 15 Jul 2023
 Departure: 09:00AM (-07:00)
 Arrival: 12:00 (+00:00)

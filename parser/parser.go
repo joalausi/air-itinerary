@@ -6,12 +6,11 @@ import (
 )
 
 type Flight struct {
-	Origin      string
-	Destination string
-	Departure   string
-	Arrival     string
-	Date        string
-	RawLines    []string
+	Origin, Destination, Date    string
+	OriginCityOnly, DestCityOnly bool
+	Departure                    string
+	Arrival                      string
+	RawLines                     []string
 }
 
 // Parse transforms input strings into a Flights slice according to the given rules.
@@ -50,7 +49,11 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 	}
 
 	// Regular expression for strings like "X to Y on D(...)"
-	routePattern := regexp.MustCompile(`[#*()]*([A-Za-z0-9]+)[^A-Za-z0-9]+to[^A-Za-z0-9]*[#*()]*([A-Za-z0-9]+)[^A-Za-z0-9]*on\s*D\(([^)]+)\)`)
+	routePattern := regexp.MustCompile(
+		`^\s*(\*)?(?:#{1,2})([A-Za-z0-9]+)[^A-Za-z0-9]+` + // *##ORIGincode
+			`to[^A-Za-z0-9]*(\*)?(?:#{1,2})([A-Za-z0-9]+)[^A-Za-z0-9]+` + // *##DESTcode
+			`on\s*D\(([^)]+)\)`, // date without D(...)
+	)
 
 	for _, raw := range procLines {
 		line := strings.TrimSpace(raw)
@@ -100,15 +103,19 @@ func Parse(lines []string, lookup map[string]string) ([]Flight, error) {
 		// Route lines of the type "X to Y on D(...)"
 		if len(line) > 0 {
 			first := line[0]
-			if first == '#' || first == '(' || first == '*' {
+			if first == '#' || first == '*' {
 				if match := routePattern.FindStringSubmatch(line); match != nil {
-					origin := match[1]
-					dest := match[2]
-					datePart := match[3]
+					// match: [ full, star1, origCode, star2, destCode, datePart ]
+					starOrig, origCode := match[1], match[2]
+					starDest, destCode := match[3], match[4]
+					datePart := match[5]
+
 					flights = append(flights, Flight{
-						Origin:      origin,
-						Destination: dest,
-						Date:        "D(" + datePart + ")",
+						Origin:         origCode,
+						Destination:    destCode,
+						Date:           "D(" + datePart + ")",
+						OriginCityOnly: starOrig == "*",
+						DestCityOnly:   starDest == "*",
 					})
 					currentIndex = len(flights) - 1
 					continue
