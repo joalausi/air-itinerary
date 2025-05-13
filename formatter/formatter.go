@@ -14,7 +14,7 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 	var out []string
 
 	// Regexp for replacing airport codes: #CODE
-	codePattern := regexp.MustCompile(`(?:##?)([A-Za-z0-9]+)`) // #CODE or ##CODE
+	codePattern := regexp.MustCompile(`(\*)?(?:#{1,2})([A-Za-z0-9]+)`) // cheking groups[1] — "*" or "", groups[2] — code than #CODE or ##CODE
 	// Regexp for searching dates D(...)
 	datePattern := regexp.MustCompile(`D\([^)]*\)`)
 
@@ -48,9 +48,9 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 			for _, raw := range f.RawLines {
 				// 2.1) First, replace the airport codes
 				line := codePattern.ReplaceAllStringFunc(raw, func(match string) string {
-					// Remove leading # or ##
-					parts := codePattern.FindStringSubmatch(match)
-					star, code := parts[1], parts[2]
+					groups := codePattern.FindStringSubmatch(match)
+					star, code := groups[1], groups[2] // groups[1] — "*" or "", groups[2] — code
+
 					if star == "*" {
 						if city, ok := lookupCity[code]; ok {
 							return city
@@ -125,11 +125,7 @@ func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) (
 				out = append(out, "Arrival: "+formatted)
 			}
 		}
-
-		// Empty line separator between blocks
-		out = append(out, "")
 	}
-
 	// Remove the final blank line if there is one
 	if len(out) > 0 && out[len(out)-1] == "" {
 		out = out[:len(out)-1]

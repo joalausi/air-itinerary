@@ -7,6 +7,7 @@ import (
 	"itinerary/parser"
 	"itinerary/utls"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -14,6 +15,11 @@ func main() {
 	flag.Usage = func() {
 		fmt.Println(utls.Yellow + "Itinerary usage:" + utls.Reset)
 		fmt.Println(utls.Yellow + "Usage: go run . ./input.txt ./output.txt ./airport-lookup.csv" + utls.Reset)
+	}
+
+	if len(os.Args) > 1 && os.Args[1] == "-debug" {
+		debugRegex()
+		return
 	}
 
 	// Parse command-line arguments
@@ -42,6 +48,8 @@ func main() {
 
 	//Process lookup data
 	lookupName, lookupCity, err := utls.LoadAirportData(lookupFile)
+	// fmt.Println("CITY[\"EGLL\"] =", lookupCity["EGLL"]) // должно быть "London"
+	// fmt.Println("CITY[\"LHR\"]  =", lookupCity["LHR"])  // если у тебя есть и IATA
 	if err != nil {
 		fmt.Printf(utls.Red+"Error loading airport lookup: %v\n"+utls.Reset, err)
 		os.Exit(1)
@@ -100,4 +108,13 @@ func WriteToFile(filePath string, lines []string) error {
 func cleanText(s string) string {
 	replacer := strings.NewReplacer("\v", "\n", "\f", "\n", "\r", "\n")
 	return replacer.Replace(s)
+}
+
+// debugRegex is a test function to demonstrate regex matching
+func debugRegex() {
+	re := regexp.MustCompile(`(\*)?(?:#{1,2})([A-Za-z0-9]+)`)
+	tests := []string{"#LAX", "##EDDW", "*#LHR", "*##EGLL"}
+	for _, t := range tests {
+		fmt.Printf("%q → %q, %q\n", t, re.FindStringSubmatch(t)[1], re.FindStringSubmatch(t)[2])
+	}
 }

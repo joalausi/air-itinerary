@@ -77,11 +77,14 @@ func LoadAirportData(filePath string) (lookupName, lookupCity map[string]string,
 		icao := rec[idx["icao_code"]]
 		iata := rec[idx["iata_code"]]
 
-		lookupName[icao] = name
-		lookupName[iata] = name
-
-		lookupCity[icao] = city
-		lookupCity[iata] = city
+		if iata != "" {
+			lookupName[iata] = name
+			lookupCity[iata] = city
+		}
+		if icao != "" {
+			lookupName[icao] = name
+			lookupCity[icao] = city
+		}
 	}
 
 	return lookupName, lookupCity, nil
