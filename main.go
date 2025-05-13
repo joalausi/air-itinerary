@@ -41,7 +41,7 @@ func main() {
 	}
 
 	//Process lookup data
-	lookupData, err := utls.LoadAirportData(lookupFile)
+	lookupName, lookupCity, err := utls.LoadAirportData(lookupFile)
 	if err != nil {
 		fmt.Printf(utls.Red+"Error loading airport lookup: %v\n"+utls.Reset, err)
 		os.Exit(1)
@@ -57,14 +57,14 @@ func main() {
 	}
 
 	// parse input data
-	flights, err := parser.Parse(inputData, lookupData)
+	flights, err := parser.Parse(inputData, lookupName)
 	if err != nil {
 		fmt.Printf(utls.Red+"Parse error: %v\n"+utls.Reset, err)
 		os.Exit(1)
 	}
 
 	// Format the processed data
-	formattedData, err := formatter.Format(flights, lookupData)
+	formattedData, err := formatter.Format(flights, lookupName, lookupCity)
 	if err != nil {
 		fmt.Printf(utls.Red+"Format error: %v\n"+utls.Reset, err)
 		os.Exit(1)

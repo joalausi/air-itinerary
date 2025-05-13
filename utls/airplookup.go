@@ -9,10 +9,10 @@ import (
 )
 
 // LoadAirportData loads airport data from a CSV file and returns a map of airport codes and names.
-func LoadAirportData(filePath string) (map[string]string, error) {
+func LoadAirportData(filePath string) (lookupName, lookupCity map[string]string, err error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer file.Close()
 
@@ -22,7 +22,7 @@ func LoadAirportData(filePath string) (map[string]string, error) {
 	// 1) Read first line (header) and validate
 	header, err := r.Read()
 	if err != nil {
-		return nil, errors.New("airport lookup malformed")
+		return nil, nil, errors.New("airport lookup malformed")
 	}
 	for i := range header {
 		header[i] = strings.TrimSpace(header[i])
@@ -48,11 +48,12 @@ func LoadAirportData(filePath string) (map[string]string, error) {
 			}
 		}
 		if !found {
-			return nil, errors.New("airport lookup malformed")
+			return nil, nil, errors.New("airport lookup malformed")
 		}
 	}
 
-	lookup := make(map[string]string)
+	lookupName = make(map[string]string)
+	lookupCity = make(map[string]string)
 
 	// 2) Read the rest of the file
 	for {
@@ -61,23 +62,27 @@ func LoadAirportData(filePath string) (map[string]string, error) {
 			break
 		}
 		if err != nil {
-			return nil, errors.New("airport lookup malformed")
+			return nil, nil, errors.New("airport lookup malformed")
 		}
 		// Check if all expected columns are present
 		for _, col := range expected {
 			cell := strings.TrimSpace(rec[idx[col]])
 			if cell == "" {
-				return nil, errors.New("airport lookup malformed")
+				return nil, nil, errors.New("airport lookup malformed")
 			}
 		}
+		// после проверки заголовка и валидации полей
 		name := rec[idx["name"]]
+		city := rec[idx["municipality"]]
 		icao := rec[idx["icao_code"]]
 		iata := rec[idx["iata_code"]]
 
-		// Map for both codes
-		lookup[icao] = name
-		lookup[iata] = name
+		lookupName[icao] = name
+		lookupName[iata] = name
+
+		lookupCity[icao] = city
+		lookupCity[iata] = city
 	}
 
-	return lookup, nil
+	return lookupName, lookupCity, nil
 }

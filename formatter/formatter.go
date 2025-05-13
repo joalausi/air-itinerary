@@ -10,7 +10,7 @@ import (
 
 // Format takes a Flight list and lookup map (code → airport name),
 // and returns ready strings for writing to output.txt.
-func Format(flights []parser.Flight, lookup map[string]string) ([]string, error) {
+func Format(flights []parser.Flight, lookupName, lookupCity map[string]string) ([]string, error) {
 	var out []string
 
 	// Regexp for replacing airport codes: #CODE
@@ -21,11 +21,11 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 	for _, f := range flights {
 		// 1) route(itinerary): Origin → Destination [on DATE]
 		if f.Origin != "" && f.Destination != "" {
-			originName := lookup[f.Origin]
+			originName := lookupName[f.Origin]
 			if originName == "" {
 				originName = f.Origin
 			}
-			destName := lookup[f.Destination]
+			destName := lookupName[f.Destination]
 			if destName == "" {
 				destName = f.Destination
 			}
@@ -49,9 +49,14 @@ func Format(flights []parser.Flight, lookup map[string]string) ([]string, error)
 				// 2.1) First, replace the airport codes
 				line := codePattern.ReplaceAllStringFunc(raw, func(match string) string {
 					// Remove leading # or ##
-					sub := codePattern.FindStringSubmatch(match)
-					code := sub[1]
-					if name, ok := lookup[code]; ok {
+					parts := codePattern.FindStringSubmatch(match)
+					star, code := parts[1], parts[2]
+					if star == "*" {
+						if city, ok := lookupCity[code]; ok {
+							return city
+						}
+					}
+					if name, ok := lookupName[code]; ok {
 						return name
 					}
 					return match
